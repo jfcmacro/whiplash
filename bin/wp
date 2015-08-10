@@ -32,15 +32,14 @@ end
 file.close
 
 # Create a new paste
-lang = $filexts[File.extname sendfile]
+lang = LangExtensions.instance.getLangDesc(File.extname sendfile)
 p = Pastie.create(conts, false, lang)
 
 # Getting environment variables that contains the tag info
-course=ENV["WPCOURSE"]
-group=ENV["WPGROUP"]
+subject=ENV["WPTAG"]
 
-unless course == nil or group == nil
-  tag="#" + course + group
+unless subject == nil
+  tag="#" + subject
 else
   tag="#NOTAGDEF"
 end
