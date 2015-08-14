@@ -1,17 +1,33 @@
 #!/usr/bin/env ruby
-# filename: wp.rb
 require 'rubygems'
 require 'twitter'
 require 'yaml'
 require 'pastie-api'
+require 'optparse'
 require 'extensions'
 
-if ARGV.empty? then
-  puts "Usage: wp <filename>"
+usage = "Usage: wp [-m MESSAGE] filename"
+options = {}
+OptionParser.new do |opt|
+  opt.banner = usage
+  opt.on('-m', '--message MESSAGE') { |o| options[:message] = o }
+  opt.on('-h', '--help') do
+    puts opt.banner
+    exit 0
+  end
+end.parse!
+
+if ARGV.empty? or ARGV.length > 1 then
+  puts usage
   exit 1
 end
 
 sendfile=ARGV[0]
+unless options[:message] == nil 
+  user_message = options[:message]
+else
+  user_message = ""
+end
 
 # Getting whiplash config file
 filepath=ENV["HOME"] + "/" + ".whiplash"
@@ -32,8 +48,11 @@ end
 file.close
 
 # Create a new paste
-lang = LangExtensions.instance.getLangDesc(File.extname sendfile)
-p = Pastie.create(conts, false, lang)
+le = LangExtensions.instance
+lang = le.getLangDesc(File.extname sendfile)
+comm = lang.prodComment('filename: ' + (File.basename sendfile))
+conts = comm + conts
+p = Pastie.create(conts, false, lang.name)
 
 # Getting environment variables that contains the tag info
 subject=ENV["WPTAG"]
@@ -54,7 +73,7 @@ end
 
 # Send a twitter with new file info
 begin
-  client.update(tag + " " + p.link)
+  client.update(tag + " " + user_message + " " + p.link)
 rescue Exception => e
   puts "No message send due: #{e.message}"
   exit 1
