@@ -4,31 +4,38 @@ require 'rubygems'
 require 'twitter'
 require 'pastie-api'
 require 'optparse'
-require 'yaml'
-require 'faraday'
-require 'faraday_middleware'
 require 'nokogiri'
+require 'wputils'
 
-def resolve_redirects(url)
-  response = fetch_response(url, method= :head)
-  if response
-    return response.to_hash[:url].to_s
-  else
-    return nil
+usage = "Usage: pwrslv [OPTIONS]\n       pwrslv [{-v --version}]"
+
+options = { :maxtweets => 1,
+            :interative => false,
+            :verbose => 0
+          }
+OptionParser.new do |opt|
+  opt.banner = usage
+  opt.version = '0.1.1.2'
+  opt.on('-i', '--interactive') { |o| options [:interactive] = true }
+  opt.on('-m', '--max MAX') { |o| options[:maxtweets] = o.to_i }
+  opt.on('-t', '--tag TAG') { |o| options[:tag] = o }
+  opt.on('--verbose LEVEL') do |o|
+    options[:verbose] = o.to_i
+    unless 0 <= options[:verbose] and options[:verbose] <= 2
+      puts opt.banner
+      exit 1
+    end
   end
-end
-
-def fetch_response(url, method= :get)
-  conn = Faraday.new do |b|
-    b.use FaradayMiddleware::FollowRedirects;
-    b.adapter :net_http
+  opt.on('-v', '--version') do |o|
+    version = opt.version
+    puts 'Version: pwrslv #{version}'
+    exit 0
   end
-  return conn.send method, url
-rescue Faraday::Error, Faraday::Error::ConnectionFailed => e
-  return nil
-end
-
-usage = "Usage: pwrslv"
+  opt.on('-h', '--help') do
+    puts opt.banner
+    exit 0
+  end
+end.parse!
 
 unless ARGV.empty? then
   puts usage
@@ -37,54 +44,44 @@ end
 
 usertwitter=ARGV[0]
 
-# Getting whiplash config file
-filepath=ENV["HOME"] + "/" + ".whiplash"
-
-yamlconf = YAML.load_file(filepath)
-# Setting twitter client
-# client = Twitter::REST::Client.new # do |config|
-#   config.consumer_key = yamlconf['consumer_key']
-#   config.consumer_secret = yamlconf['consumer_secret']
-#   config.access_token = yamlconf['access_token']
-#   config.access_token_secret = yamlconf['access_token_secret']
-# end
-
-client = Twitter::REST::Client.new do |config|
-  config.consumer_key = yamlconf['consumer_key']
-  config.consumer_secret = yamlconf['consumer_secret']
-  config.access_token = yamlconf['access_token']
-  config.access_token_secret = yamlconf['access_token_secret']
-end
-
-# msg = client.user(usertwitter)
-
-# puts msg.methods
+yamlconf = getWPcfgFile()
+client = get_tweeter_client(yamlconf)
 
 begin
-  tweets = client.search("#ST0244031")
+  tag = getWPTag(options)
+  tweets = client.search(tag)
 
   nro = 0
   tweets.each do |tw|
+    nro += 1
     uri = /http:\/\/t.co\/.*/.match(tw.text)
     unless uri == nil
-      puts uri[0]
+      # puts uri[0]
       unless uri[0] == nil
         ruri = resolve_redirects(uri[0])
         idinfo = /http:\/\/pastie\.org\/(\d+)/.match(ruri)
-        puts idinfo[0]
+        # puts idinfo[0]
         unless idinfo[1] == nil
-          puts idinfo[1]
+          # puts idinfo[1]
           p = Pastie.get(idinfo[1])
           unless p == nil
             doc = Nokogiri::HTML(p.content)
-            
-            file = File.open("file" + nro.to_s, "a")
-            file.write(doc.at('body').at('pre').inner_html.gsub("<br/>", '\n').gsub("<br>", ""))
-            nro += 1
+            src = doc.at('body').at('pre').inner_html.gsub("<br>", "\n").gsub("<br/>", "\n").gsub("&lt;","<").gsub("&gt;",">").gsub("&amp;", "&")
+            lines = src.split(/\n/)
+            psflnm = /.*filename: (.*)/.match(lines[1])
+            filename = psflnm[1]
+            puts "Writing #{filename}"
+            file = File.open(filename, "w+")
+            lines.shift
+            lines.shift
+            lines.each do |line|
+              file.puts(line)
+            end
           end
         end
       end
     end
+    break if nro == options[:maxtweets]
   end
 rescue Exception => e
   puts e

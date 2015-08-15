@@ -2,16 +2,25 @@
 
 require 'rubygems'
 require 'twitter'
-require 'yaml'
 require 'pastie-api'
 require 'optparse'
 require 'extensions'
+require 'wputils'
 
-usage = "Usage: wp [-m MESSAGE] filename"
+usage = "Usage: wp [{-m --message} MESSAGE] [{-t --tag} TAG] filename \ 
+       wp {-v --version} \
+       wp {-h --help}"
+
 options = {}
 OptionParser.new do |opt|
   opt.banner = usage
+  opt.version = '0.1.1.2'
   opt.on('-m', '--message MESSAGE') { |o| options[:message] = o }
+  opt.on('-t', '--tag TAG') { |o| options[:tag] = o }
+  opt.on('-v', '--version') do |o|
+    puts 'Version: wp #{opt.version}'
+    exit 0
+  end
   opt.on('-h', '--help') do
     puts opt.banner
     exit 0
@@ -30,10 +39,7 @@ else
   user_message = ""
 end
 
-# Getting whiplash config file
-filepath=ENV["HOME"] + "/" + ".whiplash"
-
-yamlconf = YAML.load_file(filepath)
+yamlconf = getWPcfgFile()
 
 # Reading a file
 unless File::exist? sendfile or File::readable? sendfile
@@ -52,32 +58,26 @@ file.close
 le = LangExtensions.instance
 lang = le.getLangDesc(File.extname sendfile)
 exts = File.extname sendfile
-puts "Extension: #{exts}"
+# puts "Extension: #{exts}"
 comm = lang.prodComment('filename: ' + (File.basename sendfile))
 conts = comm + conts
 p = Pastie.create(conts, false, lang.name)
 
 # Getting environment variables that contains the tag info
-subject=ENV["WPTAG"]
-
-unless subject == nil
-  tag="#" + subject
-else
-  tag="#NOTAGDEF"
-end
+tag = getWPTag(options)
 
 # Setting twitter client
-client = Twitter::REST::Client.new do |config|
-  config.consumer_key = yamlconf['consumer_key']
-  config.consumer_secret = yamlconf['consumer_secret']
-  config.access_token = yamlconf['access_token']
-  config.access_token_secret = yamlconf['access_token_secret']
-end
+client = get_tweeter_client(yamlconf)
 
 # Send a twitter with new file info
 begin
-  client.update(tag + " " + user_message + " " + p.link)
+  tweet_message = tag + " " + user_message + " " + p.link
+  if tweet_message.length > 240
+    puts "wp cannot send message: #{tweet_message} because too long: #{tweet_emssage.length}"
+    exit 1
+  end
+  client.update(tweet_message)
 rescue Exception => e
-  puts "No message send due: #{e.message}"
+  puts "wp could not sent message send due: #{e.message}"
   exit 1
 end

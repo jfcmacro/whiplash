@@ -46,13 +46,13 @@ LangExtensions = Class.new do
     end
 
     cLang = LangDescr.new.tap do |c|
-      c.name = "C/C++"
+      c.name = "c"
       c.ext = [".c"]
       c.genComment = $backComment
     end
 
     cppLang = LangDescr.new.tap do |cpp|
-      cpp.name = "C/C++"
+      cpp.name = "c"
       cpp.ext = [".cc", ".cpp", ".cxx", ".C"]
       cpp.genComment = $backComment
     end
@@ -70,7 +70,7 @@ LangExtensions = Class.new do
     end
 
     javaLang = LangDescr.new.tap do |j|
-      j.name = "JAVA"
+      j.name = "java"
       j.ext  = [".java"]
       j.genComment = $backComment
     end
@@ -83,7 +83,7 @@ LangExtensions = Class.new do
 
     bashLang = LangDescr.new.tap do |b|
       b.name = "bash"
-      b.ext  = [".ewe"]
+      b.ext  = [".bs"]
       b.genComment = $hashComment
     end
 
