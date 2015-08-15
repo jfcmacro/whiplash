@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+
 require 'rubygems'
 require 'twitter'
 require 'yaml'
@@ -50,6 +51,8 @@ file.close
 # Create a new paste
 le = LangExtensions.instance
 lang = le.getLangDesc(File.extname sendfile)
+exts = File.extname sendfile
+puts "Extension: #{exts}"
 comm = lang.prodComment('filename: ' + (File.basename sendfile))
 conts = comm + conts
 p = Pastie.create(conts, false, lang.name)

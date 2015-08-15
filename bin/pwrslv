@@ -1,0 +1,92 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'twitter'
+require 'pastie-api'
+require 'optparse'
+require 'yaml'
+require 'faraday'
+require 'faraday_middleware'
+require 'nokogiri'
+
+def resolve_redirects(url)
+  response = fetch_response(url, method= :head)
+  if response
+    return response.to_hash[:url].to_s
+  else
+    return nil
+  end
+end
+
+def fetch_response(url, method= :get)
+  conn = Faraday.new do |b|
+    b.use FaradayMiddleware::FollowRedirects;
+    b.adapter :net_http
+  end
+  return conn.send method, url
+rescue Faraday::Error, Faraday::Error::ConnectionFailed => e
+  return nil
+end
+
+usage = "Usage: pwrslv"
+
+unless ARGV.empty? then
+  puts usage
+  exit 1
+end
+
+usertwitter=ARGV[0]
+
+# Getting whiplash config file
+filepath=ENV["HOME"] + "/" + ".whiplash"
+
+yamlconf = YAML.load_file(filepath)
+# Setting twitter client
+# client = Twitter::REST::Client.new # do |config|
+#   config.consumer_key = yamlconf['consumer_key']
+#   config.consumer_secret = yamlconf['consumer_secret']
+#   config.access_token = yamlconf['access_token']
+#   config.access_token_secret = yamlconf['access_token_secret']
+# end
+
+client = Twitter::REST::Client.new do |config|
+  config.consumer_key = yamlconf['consumer_key']
+  config.consumer_secret = yamlconf['consumer_secret']
+  config.access_token = yamlconf['access_token']
+  config.access_token_secret = yamlconf['access_token_secret']
+end
+
+# msg = client.user(usertwitter)
+
+# puts msg.methods
+
+begin
+  tweets = client.search("#ST0244031")
+
+  nro = 0
+  tweets.each do |tw|
+    uri = /http:\/\/t.co\/.*/.match(tw.text)
+    unless uri == nil
+      puts uri[0]
+      unless uri[0] == nil
+        ruri = resolve_redirects(uri[0])
+        idinfo = /http:\/\/pastie\.org\/(\d+)/.match(ruri)
+        puts idinfo[0]
+        unless idinfo[1] == nil
+          puts idinfo[1]
+          p = Pastie.get(idinfo[1])
+          unless p == nil
+            doc = Nokogiri::HTML(p.content)
+            
+            file = File.open("file" + nro.to_s, "a")
+            file.write(doc.at('body').at('pre').inner_html.gsub("<br/>", '\n').gsub("<br>", ""))
+            nro += 1
+          end
+        end
+      end
+    end
+  end
+rescue Exception => e
+  puts e
+  exit 1
+end

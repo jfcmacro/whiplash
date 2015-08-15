@@ -1,6 +1,6 @@
 require 'singleton'
 
-LangDescr = Class.new do 
+LangDescr = Class.new do
   attr_accessor :name, :ext
   attr_writer :genComment
 
@@ -46,14 +46,14 @@ LangExtensions = Class.new do
     end
 
     cLang = LangDescr.new.tap do |c|
-      c.name = "c"
+      c.name = "C/C++"
       c.ext = [".c"]
       c.genComment = $backComment
     end
 
     cppLang = LangDescr.new.tap do |cpp|
-      cpp.name = "c++"
-      cpp.ext = [".cc", ".cpp", ".cxx"]
+      cpp.name = "C/C++"
+      cpp.ext = [".cc", ".cpp", ".cxx", ".C"]
       cpp.genComment = $backComment
     end
 
@@ -70,7 +70,7 @@ LangExtensions = Class.new do
     end
 
     javaLang = LangDescr.new.tap do |j|
-      j.name = "Java"
+      j.name = "JAVA"
       j.ext  = [".java"]
       j.genComment = $backComment
     end
@@ -96,6 +96,7 @@ LangExtensions = Class.new do
                  cppLang.ext[0]     => cppLang,
                  cppLang.ext[1]     => cppLang,
                  cppLang.ext[2]     => cppLang,
+                 cppLang.ext[3]     => cppLang,
                  prologLang.ext[0]  => prologLang,
                  smlLang.ext[0]     => smlLang,
                  bashLang.ext[0]    => bashLang,
