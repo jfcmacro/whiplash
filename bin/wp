@@ -6,24 +6,33 @@ require 'pastie-api'
 require 'optparse'
 require 'extensions'
 require 'wputils'
+require 'whiplash/version'
 
-usage = "Usage: wp [{-m --message} MESSAGE] [{-t --tag} TAG] filename \ 
-       wp {-v --version} \
-       wp {-h --help}"
+usage = "Usage: wp [OPTIONS]"
 
 options = {}
 OptionParser.new do |opt|
   opt.banner = usage
-  opt.version = '0.1.1.2'
-  opt.on('-m', '--message MESSAGE') { |o| options[:message] = o }
-  opt.on('-t', '--tag TAG') { |o| options[:tag] = o }
+  opt.version = Whiplash::VERSION
+  opt.separator ""
+  opt.separator "Specific options:"
+  opt.on('-m',
+         '--message MESSAGE',
+         String,
+         'A MESSAGE to be sent') { |o| options[:message] = o }
+  opt.on('-t',
+         '--tag TAG',
+         String,
+         'A TAG that identifies a group',
+         'of persons interested on the message'
+        ) { |o| options[:tag] = o }
   opt.on('-v', '--version') do |o|
-    puts 'Version: wp #{opt.version}'
+    puts 'wp version "' + opt.version + '"'
     exit 0
   end
-  opt.on('-h', '--help') do
-    puts opt.banner
-    exit 0
+  opt.on('-h', '--help') do |o|
+    puts opt.help
+    exit
   end
 end.parse!
 
@@ -33,7 +42,7 @@ if ARGV.empty? or ARGV.length > 1 then
 end
 
 sendfile=ARGV[0]
-unless options[:message] == nil 
+unless options[:message] == nil
   user_message = options[:message]
 else
   user_message = ""

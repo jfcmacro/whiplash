@@ -6,8 +6,9 @@ require 'pastie-api'
 require 'optparse'
 require 'nokogiri'
 require 'wputils'
+require 'whiplash/version'
 
-usage = "Usage: pwrslv [OPTIONS]\n       pwrslv [{-v --version}]"
+usage = "Usage: pwrslv [OPTIONS]"
 
 options = { :maxtweets => 1,
             :interative => false,
@@ -15,24 +16,38 @@ options = { :maxtweets => 1,
           }
 OptionParser.new do |opt|
   opt.banner = usage
-  opt.version = '0.1.1.2'
-  opt.on('-i', '--interactive') { |o| options [:interactive] = true }
-  opt.on('-m', '--max MAX') { |o| options[:maxtweets] = o.to_i }
-  opt.on('-t', '--tag TAG') { |o| options[:tag] = o }
+  opt.version = Whiplash::VERSION
+  opt.separator ""
+  opt.separator "Specific options:"
+  opt.on('-i',
+         '--interactive',
+         'This version is not yet implemented'
+        ) { |o| options [:interactive] = true }
+  opt.on('-m',
+         '--max MAX',
+         Integer,
+         'Maximum number of tweets retrieve from',
+         'a specific TAG'
+        ) { |o| options[:maxtweets] = o.to_i }
+  opt.on('-t',
+         '--tag TAG',
+         String,
+         'A TAG that identifies a group',
+         'of persons interested on the message'
+        ) { |o| options[:tag] = o }
   opt.on('--verbose LEVEL') do |o|
     options[:verbose] = o.to_i
     unless 0 <= options[:verbose] and options[:verbose] <= 2
-      puts opt.banner
+      puts opt.help
       exit 1
     end
   end
   opt.on('-v', '--version') do |o|
-    version = opt.version
-    puts 'Version: pwrslv #{version}'
+    puts 'pwrslv version "' + opt.version + '"'
     exit 0
   end
   opt.on('-h', '--help') do
-    puts opt.banner
+    puts opt.help
     exit 0
   end
 end.parse!
