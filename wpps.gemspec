@@ -3,9 +3,9 @@ $LOAD_PATH.unshift lib unless $LOAD_PATH.include?(lib)
 require 'whiplash/version'
 
 Gem::Specification.new do |s|
-  s.name               = 'wp'
+  s.name               = 'wpps'
   s.version            = Whiplash::VERSION
-  s.date               = '2015-08-16'
+  s.date               = '2015-08-17'
   s.summary            = 'The whip hand'
   s.description        = 'Share snippets of code with a group of persons by twitter'
   s.author             = "Juan Francisco Cardona McCormick"

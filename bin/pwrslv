@@ -69,29 +69,35 @@ begin
   nro = 0
   tweets.each do |tw|
     nro += 1
+    # puts "Tweet text: #{tw.text}"
     uri = /http:\/\/t.co\/.*/.match(tw.text)
     unless uri == nil
-      # puts uri[0]
+      # puts "Getting uri: #{uri[0]} short uri:"
       unless uri[0] == nil
         ruri = resolve_redirects(uri[0])
         idinfo = /http:\/\/pastie\.org\/(\d+)/.match(ruri)
-        # puts idinfo[0]
+        # puts "Processing idinfo: #{idinfo[0]}"
         unless idinfo[1] == nil
-          # puts idinfo[1]
+          # puts "Getting Pastie: #{idinfo[1]}"
           p = Pastie.get(idinfo[1])
           unless p == nil
             doc = Nokogiri::HTML(p.content)
             src = doc.at('body').at('pre').inner_html.gsub("<br>", "\n").gsub("<br/>", "\n").gsub("&lt;","<").gsub("&gt;",">").gsub("&amp;", "&")
             lines = src.split(/\n/)
-            psflnm = /.*filename: (.*)/.match(lines[1])
+            psflnm = /.*filename: (.*)/.match(lines[lines.length - 1])
             filename = psflnm[1]
-            puts "Writing #{filename}"
-            file = File.open(filename, "w+")
-            lines.shift
-            lines.shift
-            lines.each do |line|
-              file.puts(line)
+            puts "Start writing #{filename}"
+            begin
+              file = File.open(filename, "w+")
+              nwlines = lines.first(lines.length - 1)
+              nwlines.each do |line|
+                file.puts(line)
+              end
+            rescue Exception => e
+              puts "Error writting #{filename} due: #{e}"
+              exit 1
             end
+            puts "End writing #{filename}"
           end
         end
       end

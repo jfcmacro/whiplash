@@ -69,7 +69,7 @@ lang = le.getLangDesc(File.extname sendfile)
 exts = File.extname sendfile
 # puts "Extension: #{exts}"
 comm = lang.prodComment('filename: ' + (File.basename sendfile))
-conts = comm + conts
+conts = conts + comm
 p = Pastie.create(conts, false, lang.name)
 
 # Getting environment variables that contains the tag info
@@ -85,7 +85,8 @@ begin
     puts "wp cannot send message: #{tweet_message} because too long: #{tweet_emssage.length}"
     exit 1
   end
-  client.update(tweet_message)
+  tweet = client.update(tweet_message)
+  puts "Tweet id: #{tweet.id}"
 rescue Exception => e
   puts "wp could not sent message send due: #{e.message}"
   exit 1
