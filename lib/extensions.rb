@@ -22,11 +22,15 @@ $backComment = Proc.new do |str|
 end
 
 $backAstComment = Proc.new do |str|
-  "/* " + str + " */"
+  "/* " + str + " */" + "\n"
 end
 
 $smlComment = Proc.new do |str|
   "(* " + str + " *)" + "\n"
+end
+
+$plainComment = Proc.new do |str|
+  ">> " + str + "\n"
 end
 
 LangExtensions = Class.new do
@@ -81,10 +85,22 @@ LangExtensions = Class.new do
       e.genComment = $hashComment
     end
 
+    tclLang = LangDescr.new.tap do |t|
+      t.name = "tcl"
+      t.ext  = [".tcl"]
+      t.genComment = $hashComment
+    end
+
     bashLang = LangDescr.new.tap do |b|
       b.name = "bash"
       b.ext  = [".bs"]
       b.genComment = $hashComment
+    end
+
+    textLang = LangDescr.new.tap do |t|
+      t.name = "plain text"
+      t.ext  = [".txt"]
+      t.genComment = $plainComment
     end
 
     # puts "Lenguaje: #{rubyLang.ext[0]} objeto: #{rubyLang}"
@@ -101,10 +117,15 @@ LangExtensions = Class.new do
                  smlLang.ext[0]     => smlLang,
                  bashLang.ext[0]    => bashLang,
                  eweLang.ext[0]     => eweLang,
-                 javaLang.ext[0]    => javaLang
+                 javaLang.ext[0]    => javaLang,
+                 textLang.ext[0]    => textLang
              }
   end
+
   def getLangDesc(ext)
+    if @filexts[ext] == nil
+      ext = ".txt"
+    end
     @filexts[ext]
   end
 end

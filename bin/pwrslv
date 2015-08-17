@@ -80,13 +80,22 @@ begin
         unless idinfo[1] == nil
           # puts "Getting Pastie: #{idinfo[1]}"
           p = Pastie.get(idinfo[1])
+          # puts "Pastie: #{p}"
           unless p == nil
             doc = Nokogiri::HTML(p.content)
-            src = doc.at('body').at('pre').inner_html.gsub("<br>", "\n").gsub("<br/>", "\n").gsub("&lt;","<").gsub("&gt;",">").gsub("&amp;", "&")
+            src = doc.at('body').at('pre').
+                  inner_html.gsub("<br>", "\n").gsub("<br/>", "\n").
+                  gsub("&lt;","<").gsub("&gt;",">").gsub("&amp;", "&")
             lines = src.split(/\n/)
+            lastLine = lines[lines.length - 1]
             psflnm = /.*filename: (.*)/.match(lines[lines.length - 1])
+            if psflnm[1] == nil
+              puts "Cannot get filename from pastie link. Process ends"
+              exit 1
+            end
             filename = psflnm[1]
-            puts "Start writing #{filename}"
+            print "Start writing #{filename}"
+            $stdout.flush
             begin
               file = File.open(filename, "w+")
               nwlines = lines.first(lines.length - 1)
@@ -94,10 +103,10 @@ begin
                 file.puts(line)
               end
             rescue Exception => e
-              puts "Error writting #{filename} due: #{e}"
+              puts "\nError writting #{filename} due: #{e}"
               exit 1
             end
-            puts "End writing #{filename}"
+            puts " End writing #{filename}"
           end
         end
       end
