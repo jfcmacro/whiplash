@@ -59,7 +59,7 @@ end
 
 usertwitter=ARGV[0]
 
-yamlconf = getWPcfgFile()
+yamlconf = getPScfgFile()
 client = get_tweeter_client(yamlconf)
 
 begin

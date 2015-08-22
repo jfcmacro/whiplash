@@ -28,6 +28,11 @@ def getWPcfgFile()
   YAML.load_file(filepath)
 end
 
+def getPScfgFile()
+  filepath=ENV["HOME"] + "/" + ".powerslave"
+  YAML.load_file(filepath)
+end
+
 def get_tweeter_client(yamlconf)
   client =  Twitter::REST::Client.new do |config|
     config.consumer_key = yamlconf['consumer_key']
