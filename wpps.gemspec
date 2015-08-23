@@ -5,7 +5,7 @@ require 'whiplash/version'
 Gem::Specification.new do |s|
   s.name               = 'wpps'
   s.version            = Whiplash::VERSION
-  s.date               = '2015-08-21'
+  s.date               = '2015-08-23'
   s.summary            = 'The whip hand'
   s.description        = 'Share snippets of code with a group of persons by twitter'
   s.author             = "Juan Francisco Cardona McCormick"
