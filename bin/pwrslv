@@ -70,7 +70,7 @@ begin
   tweets.each do |tw|
     nro += 1
     # puts "Tweet text: #{tw.text}"
-    uri = /http:\/\/t.co\/.*/.match(tw.text)
+    uri = /https:\/\/t.co\/.*/.match(tw.text)
     unless uri == nil
       # puts "Getting uri: #{uri[0]} short uri:"
       unless uri[0] == nil
