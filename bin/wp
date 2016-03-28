@@ -7,15 +7,28 @@ require 'optparse'
 require 'extensions'
 require 'wputils'
 require 'whiplash/version'
+require 'initcommand'
 
-usage = "Usage: wp [OPTIONS]"
+usage = "Usage: wp init {url|file} [--ovrwr]\n"\
+        "       wp [options] filename"
 
-options = {}
+options = { :ovrwr => false,
+            :auth  => nil
+          }
 OptionParser.new do |opt|
   opt.banner = usage
   opt.version = Whiplash::VERSION
   opt.separator ""
   opt.separator "Specific options:"
+  opt.on('-a',
+         '--auth FILE',
+         String,
+         'A FILE that contains the twitter\'s',
+         'authorizations tokens'
+        ) { |o| options[:auth] = o }  
+  opt.on('--ovrwr',
+         'flag that enables overrides files,',
+         'directories') { |o| options[:ovrwr] = true }
   opt.on('-m',
          '--message MESSAGE',
          String,
@@ -36,6 +49,18 @@ OptionParser.new do |opt|
   end
 end.parse!
 
+# Test if is a init command
+if ARGV[0] == "init" then
+  ARGV.shift
+  if ARGV.length >= 1 then
+    createSubTreeDirectory('.whiplash', options[:ovrwr], ARGV[0])
+    exit 0
+  else
+    STDERR.puts usage
+    exit 1
+  end
+end
+
 if ARGV.empty? or ARGV.length > 1 then
   puts usage
   exit 1
@@ -45,10 +70,10 @@ sendfile=ARGV[0]
 unless options[:message] == nil
   user_message = options[:message]
 else
-  user_message = ""
+  user_message = "NO MESSAGE"
 end
 
-yamlconf = getWPcfgFile()
+yamlconf = getWPcfgFile(options[:auth])
 
 # Reading a file
 unless File::exist? sendfile or File::readable? sendfile
@@ -57,10 +82,7 @@ unless File::exist? sendfile or File::readable? sendfile
 end
 
 file = File.new(sendfile, "r")
-conts = ""
-file.each_line do |line|
-  conts += line
-end
+conts = file.read
 file.close
 
 # Create a new paste
@@ -69,7 +91,13 @@ lang = le.getLangDesc(File.extname sendfile)
 exts = File.extname sendfile
 comm = lang.prodComment('filename: ' + (File.basename sendfile))
 conts = conts + comm
-p = Pastie.create(conts, false, lang.name)
+p = nil
+begin 
+  p = Pastie.create(conts, false, lang.name)
+rescue => error
+  STDERR.puts "Error pastie: #{error.class} and #{error.message}"
+  exit 1
+end
 
 # Getting environment variables that contains the tag info
 tag = getWPTag(options)
@@ -81,12 +109,16 @@ client = get_tweeter_client(yamlconf)
 begin
   tweet_message = tag + " " + user_message + " " + p.link
   if tweet_message.length > 240
-    puts "wp cannot send message: #{tweet_message} because too long: #{tweet_emssage.length}"
+    STDERR.puts "wp cannot send message: #{tweet_message} because too long: #{tweet_emssage.length}"
     exit 1
   end
   tweet = client.update(tweet_message)
-  puts "Tweet id: #{tweet.id}"
+  histfile = ENV['HOME'] + '/.whiplash/history/' + tweet.id.to_s
+  hf = File.new(histfile,File::CREAT|File::TRUNC|File::RDWR,0600)
+  hf.write tweet_message
+  hf.close
+  STDOUT.puts "Tweet id: #{tweet.id}"
 rescue Exception => e
-  puts "wp could not sent message send due: #{e.message}"
+  STDERR.puts "wp could not sent message send due: #{e.message}"
   exit 1
 end

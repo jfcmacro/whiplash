@@ -7,8 +7,10 @@ require 'optparse'
 require 'nokogiri'
 require 'wputils'
 require 'whiplash/version'
+require 'initcommand'
 
-usage = "Usage: pwrslv [OPTIONS]"
+usage = "Usage: pwrslv init url\n"\
+        "       pwrslv [OPTIONS]"
 
 options = { :maxtweets => 1,
             :interative => false,
@@ -51,6 +53,15 @@ OptionParser.new do |opt|
     exit 0
   end
 end.parse!
+
+if ARGV[0] == "init" then
+  if createPermsFile(ARGV[1], ".powerslave") then
+    exit 0
+  else
+    puts "File already exits"
+    exit 1
+  end
+end
 
 unless ARGV.empty? then
   puts usage

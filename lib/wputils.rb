@@ -23,13 +23,13 @@ rescue Faraday::Error, Faraday::Error::ConnectionFailed => e
   return nil
 end
 
-def getWPcfgFile()
-  filepath=ENV["HOME"] + "/" + ".whiplash"
+def getWPcfgFile(file)
+  filepath=file || ENV["HOME"] + "/" + ".whiplash/config/auth"
   YAML.load_file(filepath)
 end
 
 def getPScfgFile()
-  filepath=ENV["HOME"] + "/" + ".powerslave"
+  filepath=ENV["HOME"] + "/" + ".powerslave/config/auth"
   YAML.load_file(filepath)
 end
 
