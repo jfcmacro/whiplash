@@ -9,11 +9,12 @@ require 'wputils'
 require 'whiplash/version'
 require 'initcommand'
 
-usage = "Usage: pwrslv init url\n"\
+usage = "Usage: pwrslv init {url|file} [--ovrwr]\n"\
         "       pwrslv [OPTIONS]"
 
 options = { :maxtweets => 1,
             :interative => false,
+            :ovrwr => false,
             :verbose => 0
           }
 OptionParser.new do |opt|
@@ -31,6 +32,9 @@ OptionParser.new do |opt|
          'Maximum number of tweets retrieve from',
          'a specific TAG'
         ) { |o| options[:maxtweets] = o.to_i }
+  opt.on('--ovrwr',
+         'flag that enables overrides files,',
+         'directories') { |o| options[:ovrwr] = true }
   opt.on('-t',
          '--tag TAG',
          String,
@@ -55,16 +59,18 @@ OptionParser.new do |opt|
 end.parse!
 
 if ARGV[0] == "init" then
-  if createPermsFile(ARGV[1], ".powerslave") then
+  ARGV.shift
+  if ARGV.length == 1 then
+    createSubTreeDirectory('.powerslave', options[:ovrwr], ARGV[0])
     exit 0
   else
-    puts "File already exits"
+    STDERR.puts usage
     exit 1
   end
 end
 
 unless ARGV.empty? then
-  puts usage
+  STDOUT.puts usage
   exit 1
 end
 
@@ -75,23 +81,24 @@ client = get_tweeter_client(yamlconf)
 
 begin
   tag = getWPTag(options)
+  puts "Tag: #{tag}" if options[:verbose] > 0
   tweets = client.search(tag)
-
+  puts "Tweets: #{tweets}" if options[:verbose] > 0
   nro = 0
   tweets.each do |tw|
     nro += 1
-    # puts "Tweet text: #{tw.text}"
+    puts "Tweet text: #{tw.text}" if options[:verbose] > 0
     uri = /https:\/\/t.co\/.*/.match(tw.text)
     unless uri == nil
-      # puts "Getting uri: #{uri[0]} short uri:"
+      puts "Getting uri: #{uri[0]} short uri:"
       unless uri[0] == nil
         ruri = resolve_redirects(uri[0])
         idinfo = /http:\/\/pastie\.org\/(\d+)/.match(ruri)
-        # puts "Processing idinfo: #{idinfo[0]}"
+        puts "Processing idinfo: #{idinfo[0]}" if options[:verbose] > 0
         unless idinfo[1] == nil
-          # puts "Getting Pastie: #{idinfo[1]}"
+          puts "Getting Pastie: #{idinfo[1]}" if options[:verbose] > 0
           p = Pastie.get(idinfo[1])
-          # puts "Pastie: #{p}"
+          puts "Pastie: #{p}" if options[:verbose] > 0
           unless p == nil
             doc = Nokogiri::HTML(p.content)
             src = doc.at('body').at('pre').
@@ -101,7 +108,7 @@ begin
             lastLine = lines[lines.length - 1]
             psflnm = /.*filename: (.*)/.match(lines[lines.length - 1])
             if psflnm[1] == nil
-              puts "Cannot get filename from pastie link. Process ends"
+              STDERR.puts "Cannot get filename from pastie link. Process ends"
               exit 1
             end
             filename = psflnm[1]
@@ -114,7 +121,7 @@ begin
                 file.puts(line)
               end
             rescue Exception => e
-              puts "\nError writting #{filename} due: #{e}"
+              STDERR.puts "\nError writting #{filename} due: #{e}"
               exit 1
             end
             puts " End writing #{filename}"
@@ -125,6 +132,6 @@ begin
     break if nro == options[:maxtweets]
   end
 rescue Exception => e
-  puts e
+  STDERR.puts e
   exit 1
 end
