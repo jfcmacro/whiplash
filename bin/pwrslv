@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# coding: utf-8
 
 require 'rubygems'
 require 'twitter'
@@ -12,10 +13,11 @@ require 'initcommand'
 usage = "Usage: pwrslv init {url|file} [--ovrwr]\n"\
         "       pwrslv [OPTIONS]"
 
-options = { :maxtweets => 1,
-            :interative => false,
-            :ovrwr => false,
-            :verbose => 0
+# Setting default options
+options = { :maxtweets => 1,       # Number of tweets to get from tweeter
+            :interative => false,  # No interactive
+            :ovrwr => false,       # No overwrite
+            :verbose => 0          # Verbosity level: no message
           }
 OptionParser.new do |opt|
   opt.banner = usage
@@ -43,7 +45,7 @@ OptionParser.new do |opt|
         ) { |o| options[:tag] = o }
   opt.on('--verbose LEVEL') do |o|
     options[:verbose] = o.to_i
-    unless 0 <= options[:verbose] and options[:verbose] <= 2
+    unless 0 <= options[:verbose] and options[:verbose] <= 3
       puts opt.help
       exit 1
     end
@@ -74,7 +76,7 @@ unless ARGV.empty? then
   exit 1
 end
 
-usertwitter=ARGV[0]
+# usertwitter=ARGV[0]
 
 yamlconf = getPScfgFile()
 client = get_tweeter_client(yamlconf)
@@ -87,48 +89,51 @@ begin
   nro = 0
   tweets.each do |tw|
     nro += 1
-    puts "Tweet text: #{tw.text}" if options[:verbose] > 0
+    # STDOUT.puts "Tweet text: #{tw.text}" if options[:verbose] > 0
+    printLevelMsg(1, options[:verbose], "Tweet text: #{tw.text}") 
     uri = /https:\/\/t.co\/.*/.match(tw.text)
-    unless uri == nil
-      puts "Getting uri: #{uri[0]} short uri:"
-      unless uri[0] == nil
-        ruri = resolve_redirects(uri[0])
-        idinfo = /http:\/\/pastie\.org\/(\d+)/.match(ruri)
-        puts "Processing idinfo: #{idinfo[0]}" if options[:verbose] > 0
-        unless idinfo[1] == nil
-          puts "Getting Pastie: #{idinfo[1]}" if options[:verbose] > 0
-          p = Pastie.get(idinfo[1])
-          puts "Pastie: #{p}" if options[:verbose] > 0
-          unless p == nil
-            doc = Nokogiri::HTML(p.content)
-            src = doc.at('body').at('pre').
-                  inner_html.gsub("<br>", "\n").gsub("<br/>", "\n").
-                  gsub("&lt;","<").gsub("&gt;",">").gsub("&amp;", "&")
-            lines = src.split(/\n/)
-            lastLine = lines[lines.length - 1]
-            psflnm = /.*filename: (.*)/.match(lines[lines.length - 1])
-            if psflnm[1] == nil
-              STDERR.puts "Cannot get filename from pastie link. Process ends"
-              exit 1
-            end
-            filename = psflnm[1]
-            print "Start writing #{filename}"
-            $stdout.flush
-            begin
-              file = File.open(filename, "w+")
-              nwlines = lines.first(lines.length - 1)
-              nwlines.each do |line|
-                file.puts(line)
-              end
-            rescue Exception => e
-              STDERR.puts "\nError writting #{filename} due: #{e}"
-              exit 1
-            end
-            puts " End writing #{filename}"
-          end
-        end
+    endIfNil(uri, "Invalid URI on tweet")
+    # STDOUT.puts "Getting uri: #{uri[0]} short uri:" if options[:verbose] > 0
+    printLevelMsg(1, options[:verbose], "Getting uri: #{uri[0]} short uri:")
+    endIfNil(uri[0], "Invalid URI format")
+    ruri = resolve_redirects(uri[0])
+    # STDOUT.puts "Resolved URI: #{ruri}" if options[:verbose] > 0
+    printLevelMsg(1, options[:verbose], "Resolved URI: #{ruri}")
+    idinfo = /http:\/\/pastie\.org\/(\d+)/.match(ruri)
+    # STDOUT.puts "Processing idinfo: #{idinfo[0]}" if options[:verbose] > 0
+    printLevelMsg(1, options[:verbose], "Processing idinfo: #{idinfo[0]}")
+    endIfNil(idinfo[1], "Invalid Pastie id")
+    # STDOUT.puts "Getting Pastie id: #{idinfo[1]}" if options[:verbose] > 0
+    printLevelMsg(1, options[:verbose], "Getting Pastie id: #{idinfo[1]}")
+    p = Pastie.get(idinfo[1])
+    # STDOUT.puts "Pastie: #{p}" if options[:verbose] > 0
+    printLevelMsg(1, options[:verbose], "Pastie: #{p}") 
+    endIfNil(p, "get pastie is nil")
+    doc = Nokogiri::HTML(p.content)
+    src = doc.at('body').at('pre').
+          inner_html.gsub("<br>", "\n").gsub("<br/>", "\n").
+          gsub("&lt;","<").gsub("&gt;",">").gsub("&amp;", "&").
+          gsub("&aacute;", "á").gsub("&eacute;", "é").gsub("&iacute;", "í").
+          gsub("&oacute;", "ó").gsub("&uactue;", "ú")
+    printLevelMsg(3, options[:verbose], "Source file: #{src}")
+    lines = src.split(/\n|\r\n/)
+    lastLine = lines[lines.length - 1]
+    psflnm = /.*filename: (.*)/.match(lines[lines.length - 1])
+    endIfNil(psflnm[1], "Cannot get filename from pastie link. Process ends")
+    filename = psflnm[1]
+    STDOUT.print "Start writing #{filename}"
+    STDOUT.flush
+    begin
+      file = File.open(filename, "w+")
+      nwlines = lines.first(lines.length - 1).last(lines.length - 2)
+      nwlines.each do |line|
+        file.puts(line)
       end
+    rescue Exception => e
+      STDERR.puts "\nError writting #{filename} due: #{e}"
+      exit 1
     end
+    STDOUT.puts " End writing #{filename}"
     break if nro == options[:maxtweets]
   end
 rescue Exception => e

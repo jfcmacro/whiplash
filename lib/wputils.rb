@@ -51,3 +51,23 @@ def getWPTag(options)
   end
   return ("#" + pTag)
 end
+
+def endIfNil(value, msg)
+  if value.nil?
+    STDERR.puts msg
+    exit 1
+  end
+end
+
+def printLevelMsg(levelMsg, currentLevel, msg)
+  case currentLevel
+  when 0
+    levelMsg = 0
+  when 1, levelMsg == currentLevel
+    STDERR.puts msg
+  when 2, levelMsg <= currentLevel
+    STDERR.puts msg
+  when 3, levelMsg <= currentLevel
+    STDERR.puts msg
+  end
+end
