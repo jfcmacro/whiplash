@@ -89,26 +89,27 @@ begin
   nro = 0
   tweets.each do |tw|
     nro += 1
-    # STDOUT.puts "Tweet text: #{tw.text}" if options[:verbose] > 0
-    printLevelMsg(1, options[:verbose], "Tweet text: #{tw.text}") 
+    printLevelMsg(1, options[:verbose], "Tweet text: #{tw.text}")
+    
     uri = /https:\/\/t.co\/.*/.match(tw.text)
     endIfNil(uri, "Invalid URI on tweet")
-    # STDOUT.puts "Getting uri: #{uri[0]} short uri:" if options[:verbose] > 0
     printLevelMsg(1, options[:verbose], "Getting uri: #{uri[0]} short uri:")
+    
     endIfNil(uri[0], "Invalid URI format")
+    
     ruri = resolve_redirects(uri[0])
-    # STDOUT.puts "Resolved URI: #{ruri}" if options[:verbose] > 0
     printLevelMsg(1, options[:verbose], "Resolved URI: #{ruri}")
+    
     idinfo = /http:\/\/pastie\.org\/(\d+)/.match(ruri)
-    # STDOUT.puts "Processing idinfo: #{idinfo[0]}" if options[:verbose] > 0
     printLevelMsg(1, options[:verbose], "Processing idinfo: #{idinfo[0]}")
+
     endIfNil(idinfo[1], "Invalid Pastie id")
-    # STDOUT.puts "Getting Pastie id: #{idinfo[1]}" if options[:verbose] > 0
     printLevelMsg(1, options[:verbose], "Getting Pastie id: #{idinfo[1]}")
+    
     p = Pastie.get(idinfo[1])
-    # STDOUT.puts "Pastie: #{p}" if options[:verbose] > 0
     printLevelMsg(1, options[:verbose], "Pastie: #{p}") 
     endIfNil(p, "get pastie is nil")
+    
     doc = Nokogiri::HTML(p.content)
     src = doc.at('body').at('pre').
           inner_html.gsub("<br>", "\n").gsub("<br/>", "\n").
@@ -116,16 +117,19 @@ begin
           gsub("&aacute;", "á").gsub("&eacute;", "é").gsub("&iacute;", "í").
           gsub("&oacute;", "ó").gsub("&uactue;", "ú")
     printLevelMsg(3, options[:verbose], "Source file: #{src}")
+    
     lines = src.split(/\n|\r\n/)
     lastLine = lines[lines.length - 1]
     psflnm = /.*filename: (.*)/.match(lines[lines.length - 1])
     endIfNil(psflnm[1], "Cannot get filename from pastie link. Process ends")
     filename = psflnm[1]
+    
     STDOUT.print "Start writing #{filename}"
     STDOUT.flush
     begin
       file = File.open(filename, "w+")
       nwlines = lines.first(lines.length - 1).last(lines.length - 2)
+      
       nwlines.each do |line|
         file.puts(line)
       end
@@ -133,7 +137,9 @@ begin
       STDERR.puts "\nError writting #{filename} due: #{e}"
       exit 1
     end
+    
     STDOUT.puts " End writing #{filename}"
+    
     break if nro == options[:maxtweets]
   end
 rescue Exception => e
