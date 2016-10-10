@@ -72,7 +72,7 @@ def printLevelMsg(levelMsg, currentLevel, msg)
   end
 end
 
-def creatFileWrTr(filename, options, mode, msg)
+def creatFileWrTr(filename, msg)
   hf = File.new(filename, File::CREAT|File::TRUNC|File::RDWR,0600)
   hf.write msg
   hf.close

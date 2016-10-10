@@ -114,12 +114,9 @@ begin
   end
   tweet = client.update(tweet_message)
   histfile = File.join(ENV['HOME'], '.whiplash', 'history', tweet.id.to_s)
-  creatFileWrTr(histfile, msg)
-  # hf = File.new(histfile,File::CREAT|File::TRUNC|File::RDWR,0600)
-  # hf.write tweet_message
-  # hf.close 
+  creatFileWrTr(histfile, conts)
   STDOUT.puts "Tweet id: #{tweet.id}"
 rescue Exception => e
-  STDERR.puts "wp could not sent message send due: #{e.message}"
+  STDERR.puts "wp could not send a message due: #{e.message}"
   exit 1
 end

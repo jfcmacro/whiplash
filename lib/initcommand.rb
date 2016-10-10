@@ -3,7 +3,7 @@ require 'uri'
 
 def createSubTreeDirectory(workDir, ovrwr, url)
   workPath = ENV['HOME'] + '/' + workDir
-  
+
   if Dir.exists? workPath then
     if ovrwr then
       eraseDirAll(workPath)

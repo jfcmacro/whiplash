@@ -120,19 +120,22 @@ begin
     
     lines = src.split(/\n|\r\n/)
     lastLine = lines[lines.length - 1]
-    psflnm = /.*filename: (.*)/.match(lines[lines.length - 1])
+    psflnm = /.*filename: (.*)/.match(lastLine)
+    
     endIfNil(psflnm[1], "Cannot get filename from pastie link. Process ends")
     filename = psflnm[1]
     
     STDOUT.print "Start writing #{filename}"
     STDOUT.flush
+    
     begin
+      
       file = File.open(filename, "w+")
       nwlines = lines.first(lines.length - 1).last(lines.length - 2)
-      
-      nwlines.each do |line|
-        file.puts(line)
-      end
+      file.puts(nwlines)
+      # nwlines.each do |line|
+      #   file.puts(line)
+      # end
     rescue Exception => e
       STDERR.puts "\nError writting #{filename} due: #{e}"
       exit 1
