@@ -43,18 +43,18 @@ OptionParser.new do |opt|
          'A TAG that identifies a group',
          'of persons interested on the message'
         ) { |o| options[:tag] = o }
-  opt.on('--verbose LEVEL') do |o|
+  opt.on '--verbose LEVEL' do |o|
     options[:verbose] = o.to_i
     unless 0 <= options[:verbose] and options[:verbose] <= 3
       puts opt.help
       exit 1
     end
   end
-  opt.on('-v', '--version') do |o|
+  opt.on '-v', '--version' do |o|
     puts 'pwrslv version "' + opt.version + '"'
     exit 0
   end
-  opt.on('-h', '--help') do
+  opt.on '-h', '--help' do
     puts opt.help
     exit 0
   end
@@ -63,7 +63,7 @@ end.parse!
 if ARGV[0] == "init" then
   ARGV.shift
   if ARGV.length == 1 then
-    createSubTreeDirectory('.powerslave', options[:ovrwr], ARGV[0])
+    createSubTreeDirectory '.powerslave', options[:ovrwr], ARGV[0]
     exit 0
   else
     STDERR.puts usage
@@ -78,74 +78,78 @@ end
 
 # usertwitter=ARGV[0]
 
-yamlconf = getPScfgFile()
-client = get_tweeter_client(yamlconf)
+yamlconf = getPScfgFile
+client = get_tweeter_client yamlconf
 
 begin
-  tag = getWPTag(options)
+  tag = getWPTag options
   puts "Tag: #{tag}" if options[:verbose] > 0
-  tweets = client.search(tag)
+  tweets = client.search tag
   puts "Tweets: #{tweets}" if options[:verbose] > 0
   nro = 0
   tweets.each do |tw|
     nro += 1
-    printLevelMsg(1, options[:verbose], "Tweet text: #{tw.text}")
+    printLevelMsg 1, options[:verbose], "Tweet text: #{tw.text}"
     
     uri = /https:\/\/t.co\/.*/.match(tw.text)
     endIfNil(uri, "Invalid URI on tweet")
-    printLevelMsg(1, options[:verbose], "Getting uri: #{uri[0]} short uri:")
+    printLevelMsg 1, options[:verbose], "Getting uri: #{uri[0]} short uri:"
     
     endIfNil(uri[0], "Invalid URI format")
     
     ruri = resolve_redirects(uri[0])
-    printLevelMsg(1, options[:verbose], "Resolved URI: #{ruri}")
+    printLevelMsg 1, options[:verbose], "Resolved URI: #{ruri}"
     
     idinfo = /http:\/\/pastie\.org\/(\d+)/.match(ruri)
-    printLevelMsg(1, options[:verbose], "Processing idinfo: #{idinfo[0]}")
+    printLevelMsg 1, options[:verbose], "Processing idinfo: #{idinfo[0]}"
 
-    endIfNil(idinfo[1], "Invalid Pastie id")
-    printLevelMsg(1, options[:verbose], "Getting Pastie id: #{idinfo[1]}")
+    endIfNil idinfo[1], "Invalid Pastie id"
+    printLevelMsg 1, options[:verbose], "Getting Pastie id: #{idinfo[1]}"
     
-    p = Pastie.get(idinfo[1])
-    printLevelMsg(1, options[:verbose], "Pastie: #{p}") 
-    endIfNil(p, "get pastie is nil")
+    p = Pastie.get idinfo[1]
+    printLevelMsg 1, options[:verbose], "Pastie: #{p}"
+    endIfNil p, "get pastie is nil"
     
-    doc = Nokogiri::HTML(p.content)
+    doc = Nokogiri::HTML p.content
     src = doc.at('body').at('pre').
           inner_html.gsub("<br>", "\n").gsub("<br/>", "\n").
           gsub("&lt;","<").gsub("&gt;",">").gsub("&amp;", "&").
           gsub("&aacute;", "á").gsub("&eacute;", "é").gsub("&iacute;", "í").
           gsub("&oacute;", "ó").gsub("&uactue;", "ú")
-    printLevelMsg(3, options[:verbose], "Source file: #{src}")
+    printLevelMsg 3, options[:verbose], "Source file: #{src}"
     
-    lines = src.split(/\n|\r\n/)
+    lines = src.split /\n|\r\n/
     lastLine = lines[lines.length - 1]
-    psflnm = /.*filename: (.*)/.match(lastLine)
+    psflnm = /.*filename: (.*)/.match lastLine
     
-    endIfNil(psflnm[1], "Cannot get filename from pastie link. Process ends")
+    endIfNil psflnm[1], "Cannot get filename from pastie link. Process ends"
     filename = psflnm[1]
-    
-    STDOUT.print "Start writing #{filename}"
-    STDOUT.flush
+
+    unless File.exist? filename and not options[:ovrwr] then
+      STDOUT.print "Start writing #{filename}"
+      STDOUT.flush
+    end
     
     begin
-      
-      file = File.open(filename, "w+")
-      nwlines = lines.first(lines.length - 1).last(lines.length - 2)
-      file.puts(nwlines)
-      # nwlines.each do |line|
-      #   file.puts(line)
-      # end
+
+      unless File.exist? filename and not options[:ovrwr] then
+        file = File.open filename, "w+"
+        nwlines = lines.first(lines.length - 1).last(lines.length - 2)
+        file.puts nwlines
+      end
     rescue Exception => e
       STDERR.puts "\nError writting #{filename} due: #{e}"
       exit 1
     end
-    
-    STDOUT.puts " End writing #{filename}"
+
+    unless File.exist? filename and not options[:ovrwr] then
+      STDOUT.puts " End writing #{filename}"
+    end
     
     break if nro == options[:maxtweets]
   end
 rescue Exception => e
+  
   STDERR.puts e
   exit 1
 end

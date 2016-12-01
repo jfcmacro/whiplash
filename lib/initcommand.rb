@@ -28,8 +28,10 @@ def eraseDirAll(dir)
       if not (filename == '.' or filename == '..') then
         pathname = dir + '/' + filename
         if File.file? pathname then
+          puts "Deleting file #{pathname}"
           File.delete pathname
         elsif File.directory? pathname then
+          puts "Deleting directory #{pathname}"
           eraseDirAll pathname
         else
           puts "This never could happen #{pathname}"
@@ -37,7 +39,12 @@ def eraseDirAll(dir)
         end
       end
     end
-    Dir.delete(dir)
+    begin
+      Dir.delete dir
+    rescue SystemCallError => sce
+      STDERR.puts "Unexpected exection #{sce}"
+      exit 1
+    end
   end
 end
 

@@ -25,7 +25,7 @@ OptionParser.new do |opt|
          String,
          'A FILE that contains the twitter\'s',
          'authorizations tokens'
-        ) { |o| options[:auth] = o }  
+        ) { |o| options[:auth] = o }
   opt.on('--ovrwr',
          'flag that enables overrides files,',
          'directories') { |o| options[:ovrwr] = true }
@@ -43,7 +43,8 @@ OptionParser.new do |opt|
     puts 'wp version "' + opt.version + '"'
     exit 0
   end
-  opt.on('-h', '--help') do |o|
+  opt.on '-h', '--help' do |o|
+
     puts opt.help
     exit
   end
@@ -53,7 +54,7 @@ end.parse!
 if ARGV[0] == "init" then
   ARGV.shift
   if ARGV.length == 1 then
-    createSubTreeDirectory('.whiplash', options[:ovrwr], ARGV[0])
+    createSubTreeDirectory '.whiplash', options[:ovrwr], ARGV[0]
     exit 0
   else
     STDERR.puts usage
@@ -62,6 +63,7 @@ if ARGV[0] == "init" then
 end
 
 if ARGV.empty? or ARGV.length > 1 then
+
   puts usage
   exit 1
 end
@@ -73,7 +75,7 @@ else
   user_message = "NO MESSAGE"
 end
 
-yamlconf = getWPcfgFile(options[:auth])
+yamlconf = getWPcfgFile options[:auth]
 
 # Reading a file
 unless File::exist? sendfile or File::readable? sendfile
@@ -81,42 +83,57 @@ unless File::exist? sendfile or File::readable? sendfile
   exit 1
 end
 
-file = File.new(sendfile, "r")
+file = File.new sendfile, "r"
 conts = file.read
 file.close
 
 # Create a new paste
 le = LangExtensions.instance
-lang = le.getLangDesc(File.extname sendfile)
+lang = le.getLangDesc File.extname sendfile
 exts = File.extname sendfile
 comm = lang.prodComment('filename: ' + (File.basename sendfile))
 conts = conts + comm
 p = nil
-begin 
-  p = Pastie.create(conts, false, lang.name)
+begin
+  p = Pastie.create conts, false, lang.name
 rescue => error
   STDERR.puts "Error pastie: #{error.class} and #{error.message}"
   exit 1
 end
 
 # Getting environment variables that contains the tag info
-tag = getWPTag(options)
+tag = getWPTag options
 
 # Setting twitter client
-client = get_tweeter_client(yamlconf)
+client = get_tweeter_client yamlconf
 
 # Send a twitter with new file info
 begin
+  
   tweet_message = tag + " " + user_message + " " + p.link
+
   if tweet_message.length > 240
     STDERR.puts "wp cannot send message: #{tweet_message} because too long: #{tweet_emssage.length}"
     exit 1
   end
-  tweet = client.update(tweet_message)
-  histfile = File.join(ENV['HOME'], '.whiplash', 'history', tweet.id.to_s)
-  creatFileWrTr(histfile, conts)
+  
+  tweet = client.update tweet_message
+  tagDirFile = File.join ENV['HOME'], '.whiplash', 'history', tag.sub("#",'')
+
+  STDOUT.puts "Tag: #{tagDirFile}"
+  
+  Dir.mkdir tagDirFile unless Dir.exist? tagDirFile
+
+  STDOUT.puts "Created dir: #{Dir.exist? tagDirFile}"
+  
+  histfile = File.join ENV['HOME'], '.whiplash', 'history', tag.sub("#",''), tweet.id.to_s
+
+  STDOUT.puts "File: #{histfile}"
+  
+  creatFileWrTr histfile, conts
   STDOUT.puts "Tweet id: #{tweet.id}"
 rescue Exception => e
+
   STDERR.puts "wp could not send a message due: #{e.message}"
   exit 1
 end
