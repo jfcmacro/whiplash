@@ -87,6 +87,12 @@ file = File.new sendfile, "r"
 conts = file.read
 file.close
 
+unless conts.end_with? "\n"
+  array = conts.lines
+  array[array.length - 1] = array[array.length - 1] + "\n"
+  conts = array.join
+end
+
 # Create a new paste
 le = LangExtensions.instance
 lang = le.getLangDesc File.extname sendfile
@@ -118,17 +124,12 @@ begin
   end
   
   tweet = client.update tweet_message
-  tagDirFile = File.join ENV['HOME'], '.whiplash', 'history', tag.sub("#",'')
 
-  STDOUT.puts "Tag: #{tagDirFile}"
+  tagDirFile = File.join ENV['HOME'], '.whiplash', 'history', tag.sub("#",'')
   
   Dir.mkdir tagDirFile unless Dir.exist? tagDirFile
-
-  STDOUT.puts "Created dir: #{Dir.exist? tagDirFile}"
   
   histfile = File.join ENV['HOME'], '.whiplash', 'history', tag.sub("#",''), tweet.id.to_s
-
-  STDOUT.puts "File: #{histfile}"
   
   creatFileWrTr histfile, conts
   STDOUT.puts "Tweet id: #{tweet.id}"

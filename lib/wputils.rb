@@ -4,7 +4,7 @@ require 'yaml'
 require 'faraday'
 require 'faraday_middleware'
 
-def resolve_redirects(url)
+def resolve_redirects url
   response = fetch_response(url, method= :head)
   if response
     return response.to_hash[:url].to_s
@@ -13,7 +13,7 @@ def resolve_redirects(url)
   end
 end
 
-def fetch_response(url, method= :get)
+def fetch_response url, method= :get
   conn = Faraday.new do |b|
     b.use FaradayMiddleware::FollowRedirects;
     b.adapter :net_http
@@ -23,7 +23,7 @@ rescue Faraday::Error, Faraday::Error::ConnectionFailed => e
   return nil
 end
 
-def getWPcfgFile(file)
+def getWPcfgFile file
   filepath=file || File.join(ENV['HOME'], '.whiplash', 'config' ,'auth')
   YAML.load_file(filepath)
 end
@@ -33,7 +33,7 @@ def getPScfgFile()
   YAML.load_file(filepath)
 end
 
-def get_tweeter_client(yamlconf)
+def get_tweeter_client yamlconf
   client =  Twitter::REST::Client.new do |config|
     config.consumer_key = yamlconf['consumer_key']
     config.consumer_secret = yamlconf['consumer_secret']
@@ -42,7 +42,7 @@ def get_tweeter_client(yamlconf)
   end
 end
 
-def getWPTag(options)
+def getWPTag options
   pTag="NOTAGDEF"
   if options[:tag] != nil
     pTag = options[:tag]
@@ -52,14 +52,14 @@ def getWPTag(options)
   return ("#" + pTag)
 end
 
-def endIfNil(value, msg)
+def endIfNil value, msg
   if value.nil?
     STDERR.puts msg
     exit 1
   end
 end
 
-def printLevelMsg(levelMsg, currentLevel, msg)
+def printLevelMsg levelMsg, currentLevel, msg
   case currentLevel
   when 0
     levelMsg = 0
@@ -72,8 +72,14 @@ def printLevelMsg(levelMsg, currentLevel, msg)
   end
 end
 
-def creatFileWrTr(filename, msg)
+def creatFileWrTr filename, msg
   hf = File.new(filename, File::CREAT|File::TRUNC|File::RDWR,0600)
   hf.write msg
   hf.close
+end
+
+def writeFileWPlus filename, data
+  file = File.open filename, "w+"
+  file.puts data
+  file.close
 end

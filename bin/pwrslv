@@ -83,14 +83,20 @@ client = get_tweeter_client yamlconf
 
 begin
   tag = getWPTag options
+  tagTitle = tag.sub '#',''
+  
+  tagDirFile = File.join ENV['HOME'], '.powerslave', 'history', tagTitle
+  Dir.mkdir tagDirFile unless Dir.exist? tagDirFile
+  
   puts "Tag: #{tag}" if options[:verbose] > 0
   tweets = client.search tag
   puts "Tweets: #{tweets}" if options[:verbose] > 0
   nro = 0
   tweets.each do |tw|
+    twId = tw.id.to_s
+    puts "Tweet id: #{twId}" if options[:verbose] > 0
     nro += 1
     printLevelMsg 1, options[:verbose], "Tweet text: #{tw.text}"
-    
     uri = /https:\/\/t.co\/.*/.match(tw.text)
     endIfNil(uri, "Invalid URI on tweet")
     printLevelMsg 1, options[:verbose], "Getting uri: #{uri[0]} short uri:"
@@ -133,9 +139,12 @@ begin
     begin
 
       unless File.exist? filename and not options[:ovrwr] then
-        file = File.open filename, "w+"
+        
+        histfile = File.join ENV['HOME'], '.powerslave', 'history', tagTitle, twId
+
         nwlines = lines.first(lines.length - 1).last(lines.length - 2)
-        file.puts nwlines
+        writeFileWPlus filename,nwlines
+        writeFileWPlus histfile,lines
       end
     rescue Exception => e
       STDERR.puts "\nError writting #{filename} due: #{e}"
