@@ -49,4 +49,8 @@ Una vez instalado el ruby con el sistema de gemas. Es necesario instalar `wpps`:
 $ gem install wpps
 ```
 
-El anterior comando se encarga de instalar el sistema. 
+El anterior comando se encarga de instalar el sistema.
+
+## Creando fichero de permisos en twitter
+
+![Imagenes](./imagenes/twitter_apps.png)
