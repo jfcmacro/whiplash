@@ -4,7 +4,10 @@ Enviar y recibir ejemplos de codigo utilizando twitter y pastie.
 
 ## Requerimientos
 
-wpps está desarrollado completamente en Ruby, a través del sistema de
+En primer lugar debe tener instalado Ruby [Ver][1] e instalar
+el sistema de paquetes "gem" (gemas)
+
+`wpps` está desarrollado completamente en Ruby, a través del sistema de
 paquetes `ruby gems` y la aplicación depende de las siguientes "gemas":
 
 - twitter 5.16.0
@@ -26,7 +29,7 @@ En Linux existen muchas distribuiciones. Vamos a mencionar solamente dos de ella
 
 En Ubuntu se debe instalar ruby y su versión de desarrollo:
 
-```
+```shell
 $ sudo apt-get install ruby-full
 ```
 
@@ -42,7 +45,7 @@ $ sudo dnf install ruby ruby-devel
 
 En OS/X utilizando Homebrew
 
-```
+```shell
 $ brew instal ruby
 ```
 
@@ -154,5 +157,58 @@ access_token_secret: <valor en la página>
 
 ## Instalación de `wpps`
 
-Un vez instalado ruby [Ver][1]
- Copyright (c)  Copyright Holder All Rights Reserved.
+Un vez instalado ruby [Ver][1] y su sistema de paquetes ("gem"), se procede abrir una termina e instalar la gema `wpps`, así:
+
+```shell
+$ gem install wpps
+```
+
+Este se encarga de instalar la gema, que esta dividida
+en dos programas: `wp` (enviar ficheros) y `pwrslv` que se
+encarga de recibir ficheros. Ambos programas requiere que
+el sistema sea inicializado con los ficheros de autorización.
+
+## Configuración inicial de wpps (`wp` y `pwrslv`)
+
+Cada programa requiere un fichero de autorización (Ver sección "Creando fichero de permisos en twitter"). Este permite que los usuarios puedan enviar ficheros o recibir.
+
+El siguiente comando inicializa `wp`:
+
+```shell
+$ wp init <fichero autorizacion>
+```
+
+El sigiente comando inicializa `pwrslv`:
+
+```
+$ pwrslv init <fichero autorizacion>
+```
+
+## Compartiendo un fichero fuente a través de `wp`
+
+Se puede compartir un fichero fuente a través de `wp` utilizandoel siguiente
+comando:
+
+```shell
+$ wp --tag "HASHTAG" --messsage "MESSAGE" filepath
+```
+Donde **HASHTAG** (opcional) es la etiqueta para identificar el grupo al cual se
+le quiere enviar (Ver [hastag](https://support.twitter.com/articles/49309)).
+A diferencia de twitter no se requiere que se adiciione "#" al inicio.
+**MESSAGE** (opcional) es el mensaje con el quiere registrarese el twitter
+(máximo 140 carácteres). **filepath** es el nombre de ruta del fichero que
+se va enviar, es un fichero fuente de algún lenguaje de programación.
+
+## Recibiendo un fichero fuente a través de `pwrslv`
+
+Cuando un fichero es enviado a través de `wp` este puede ser recibido
+utilizando `pwrslv`. Todo depende si el fichero fue enviado con o sin etiqueta
+("Hashtag"). El comando para recibir un fichero es el siguiente.
+
+```shell
+$ pwrslv --tag "HASHTAG"
+```
+
+Donde **HASHTAG** (opcional)
+
+Copyright (c)  Copyright Holder All Rights Reserved.
